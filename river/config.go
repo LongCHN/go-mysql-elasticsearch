@@ -12,6 +12,7 @@ import (
 type SourceConfig struct {
 	Schema string   `toml:"schema"`
 	Tables []string `toml:"tables"`
+	IgnoreTables []string `toml:"ignore_tables"`
 }
 
 // Config is the configuration

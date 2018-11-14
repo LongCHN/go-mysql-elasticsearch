@@ -130,7 +130,11 @@ func (r *River) prepareCanal() error {
 
 		r.canal.AddDumpDatabases(keys...)
 	}
-
+	for _, s := range r.c.Sources {
+		if len(s.IgnoreTables) != 0 {
+			r.canal.AddDumpIgnoreTables(s.Schema, s.IgnoreTables...)
+		}
+	}
 	r.canal.SetEventHandler(&eventHandler{r})
 
 	return nil

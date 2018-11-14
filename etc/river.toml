@@ -52,7 +52,8 @@ schema = "test"
 # "t_[0-9]{4}" is a wildcard table format, you can use it if you have many sub tables, like table_0000 - table_1023
 # I don't think it is necessary to sync all tables in a database.
 tables = ["t", "t_[0-9]{4}", "tfield", "tfilter"]
-
+#you can use it if other table data is too large,
+ignore_tables = ["table1"]
 # Below is for special rule mapping
 
 # Very simple example

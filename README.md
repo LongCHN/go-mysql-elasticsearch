@@ -56,6 +56,8 @@ tables = ["*"]
 
 # When using an asterisk, it is not allowed to sync multiple tables
 # tables = ["*", "table"]
+# When need mysqldump skip other table
+# ignore_tables = ["table1"]
 ```
 
 ## Rule
