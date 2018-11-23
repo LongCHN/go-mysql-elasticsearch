@@ -548,6 +548,50 @@ func (b *BinlogSyncer) retrySync() error {
 	return nil
 }
 
+func (b *BinlogSyncer) retrySyncWithMasterPos() error {
+	b.m.Lock()
+	defer b.m.Unlock()
+	b.parser.Reset()
+	if b.gset != nil {
+		log.Info("cant re-sync with GTID")
+		//nothing to do
+	} else {
+		if err := b.prepareSyncMasterPos(); err != nil {
+			return errors.Trace(err)
+		}
+	}
+	return nil
+}
+
+func (b *BinlogSyncer) prepareSyncMasterPos() error {
+	if err := b.prepare(); err != nil {
+		return errors.Trace(err)
+	}
+	curPos := b.GetMasterPos()
+	pos := b.nextPos
+	if b.nextPos.Name != curPos.Name {
+		log.Infof("current postion is %v, but mysql position is %v, must retry sync", b.nextPos, curPos)
+		pos.Name = curPos.Name
+		// always start from position 4
+		pos.Pos = 4
+	}
+	log.Infof("begin to re-sync from master postion %s", pos)
+	if err := b.writeBinlogDumpCommand(pos); err != nil {
+		return errors.Trace(err)
+	}
+	return nil
+}
+
+func (b *BinlogSyncer) GetMasterPos() (p Position) {
+	r, _ := b.c.Execute("SHOW MASTER STATUS")
+	binFile, _ := r.GetString(0, 0)
+	binPos, _ := r.GetInt(0, 1)
+	log.Infof("mysql current postion file is %s", binFile)
+	p.Name = string(binFile)
+	p.Pos = uint32(binPos)
+	return p
+}
+
 func (b *BinlogSyncer) prepareSyncPos(pos Position) error {
 	// always start from position 4
 	if pos.Pos < 4 {
@@ -649,8 +693,13 @@ func (b *BinlogSyncer) onStream(s *BinlogStreamer) {
 			}
 		case ERR_HEADER:
 			err = b.c.HandleErrorPacket(data)
-			s.closeWithError(err)
-			return
+			log.Errorf("onStream ERR_HEADER err: %v, position %v", err, b.nextPos)
+			if err = b.retrySyncWithMasterPos(); err != nil {
+				log.Errorf("retry sync master position err: %v", err)
+				s.closeWithError(err)
+				return
+			}
+			continue
 		case EOF_HEADER:
 			// Refer http://dev.mysql.com/doc/internals/en/packet-EOF_Packet.html
 			// In the MySQL client/server protocol, EOF and OK packets serve the same purpose.

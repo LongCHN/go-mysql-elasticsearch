@@ -210,14 +210,17 @@ func (r *River) makeRequest(rule *Rule, action string, rows [][]interface{}) ([]
 }
 
 func (r *River) makeInsertRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
+	log.Infof("[INSERT][%s][%s]%s", rule.Schema, rule.Table, rows)
 	return r.makeRequest(rule, canal.InsertAction, rows)
 }
 
 func (r *River) makeDeleteRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
+	log.Infof("[DELETE][%s][%s]%s", rule.Schema, rule.Table, rows)
 	return r.makeRequest(rule, canal.DeleteAction, rows)
 }
 
 func (r *River) makeUpdateRequest(rule *Rule, rows [][]interface{}) ([]*elastic.BulkRequest, error) {
+	log.Infof("[UPDATE][%s][%s]%s", rule.Schema, rule.Table, rows)
 	if len(rows)%2 != 0 {
 		return nil, errors.Errorf("invalid update rows event, must have 2x rows, but %d", len(rows))
 	}
