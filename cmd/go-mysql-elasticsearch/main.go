@@ -22,6 +22,7 @@ var server_id = flag.Int("server_id", 0, "MySQL server id, as a pseudo slave")
 var flavor = flag.String("flavor", "", "flavor: mysql or mariadb")
 var execution = flag.String("exec", "", "mysqldump execution path")
 var logLevel = flag.String("log_level", "info", "log level")
+var logPath = flag.String("log_path", "/var/log/go-mysql-elasticsearch.log", "log output path")
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
